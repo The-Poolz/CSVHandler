@@ -9,17 +9,17 @@ export interface IRow {
   amount: BigNumber;
 }
 
-interface IDataHandlerProps {
+export interface IDataHandlerProps {
   rows: IRow[];
   setRows: React.Dispatch<React.SetStateAction<IRow[]>>;
   tokenDecimal?: number;
   isEditable?: boolean;
 }
 
-const AddressAmountHandler = ({
+const CSVHandler = ({
   rows,
   setRows,
-  tokenDecimal,
+//   tokenDecimal,
   isEditable
 }: IDataHandlerProps) => {
   const [dragging, setDragging] = useState<boolean>(false);
@@ -212,4 +212,4 @@ const AddressAmountHandler = ({
   );
 };
 
-export default AddressAmountHandler;
+export default CSVHandler;

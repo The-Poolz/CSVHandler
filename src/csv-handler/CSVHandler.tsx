@@ -13,14 +13,14 @@ export interface IDataHandlerProps {
   rows: IRow[];
   setRows: React.Dispatch<React.SetStateAction<IRow[]>>;
   tokenDecimal?: number;
-  isEditable?: boolean;
+  isDeletable?: boolean;
 }
 
 const CSVHandler = ({
   rows,
   setRows,
 //   tokenDecimal,
-  isEditable
+  isDeletable
 }: IDataHandlerProps) => {
   const [dragging, setDragging] = useState<boolean>(false);
   const dragDiv = useRef<HTMLDivElement>(null);
@@ -180,7 +180,7 @@ const CSVHandler = ({
                 <span>{row.amount.toFixed()}</span>
                 {/* <span>{toHumanNumber(row.amount, tokenDecimal)}</span> */}
                 {
-                  isEditable && 
+                  isDeletable && 
                   <button
                     onClick={() => {
                       setRows((oldRows) => {

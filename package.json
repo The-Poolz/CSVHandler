@@ -18,6 +18,9 @@
     "url": "https://github.com/The-Poolz/CSVHandler/issues"
   },
   "homepage": "https://github.com/The-Poolz/CSVHandler#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "bignumber.js": "^9.1.2",
     "papaparse": "^5.4.1",

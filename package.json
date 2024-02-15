@@ -10,6 +10,14 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/The-Poolz/CSVHandler.git"
+  },
+  "bugs": {
+    "url": "https://github.com/The-Poolz/CSVHandler/issues"
+  },
+  "homepage": "https://github.com/The-Poolz/CSVHandler#readme",
   "dependencies": {
     "bignumber.js": "^9.1.2",
     "papaparse": "^5.4.1",

@@ -20,5 +20,6 @@ export const FirstStory: Story = {
     render: ({...args}) => <CSVHandlerWrapper {...args}/>,
     args: {
         isDeletable: true,
+        isEditable: true,
     }
 }

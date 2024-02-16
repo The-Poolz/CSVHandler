@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
-import BigNumber from "bignumber.js";
 
 export type BuilderStatus = "ready" | "mintingStarted" | "mintingFinished" | "mintingFailed"
 
 export interface IRow {
   address: string;
-  amount: BigNumber;
+  amount: string;
 }
 
 export interface IDataHandlerProps {
   rows: IRow[];
   setRows: React.Dispatch<React.SetStateAction<IRow[]>>;
+  verifyAddress?: (address: string) => boolean;
   tokenDecimal?: number;
   isDeletable?: boolean;
 }
@@ -19,16 +19,27 @@ export interface IDataHandlerProps {
 const CSVHandler = ({
   rows,
   setRows,
-//   tokenDecimal,
+  verifyAddress,
   isDeletable
 }: IDataHandlerProps) => {
   const [dragging, setDragging] = useState<boolean>(false);
   const dragDiv = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
     const div = dragDiv.current;
     if (!div) return;
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+      setDragging(true);
+    };
+    const handleDragEnter = (event: DragEvent) => {
+      event.preventDefault();
+      setDragging(true);
+    };
+    const handleDragLeave = (event: DragEvent) => {
+      event.preventDefault();
+      setDragging(false);
+    };
     div.addEventListener("dragover", handleDragOver);
     div.addEventListener("dragenter", handleDragEnter);
     div.addEventListener("dragleave", handleDragLeave);
@@ -45,71 +56,12 @@ const CSVHandler = ({
     console.log("uploading");
     const file = event.target.files?.[0];
     if (!file) return;
-
-    Papa.parse(file, {
-      header: false,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      complete: (result: Papa.ParseResult<string>) => {
-        setRows([]);
-        // check address here
-        // if(!web3.utils.isAddress(result.data[0][0])) {
-        //   result.data.shift()
-        // }
-        const data: IRow[] = result.data.map((data: any) => {
-          return {
-            address: data[0],
-            amount: data[1],
-          };
-        });
-        processData(data);
-      },
-    });
+    parseData(file);   
   };
 
   const handlePaste = async () => {
     const clipboardData = await navigator.clipboard.readText();
-    // console.log(clipboardData)
-    Papa.parse(clipboardData, {
-      header: false,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      complete: (result) => {
-        setRows([]);
-        const data: IRow[] = result.data.map((data: any) => {
-          return {
-            address: data[0],
-            amount: data[1],
-          };
-        });
-        processData(data);
-      },
-    });
-  };
-
-  const processData = (newRows: IRow[]) => {
-    console.log(newRows);
-    setRows(newRows);
-    const newTotalAmount = newRows.reduce(
-      (acc, row) => acc.plus(row.amount),
-      new BigNumber(0)
-    );
-    console.log(newTotalAmount.toString());
-  };
-
-  const handleDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragEnter = (event: DragEvent) => {
-    event.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragLeave = (event: DragEvent) => {
-    event.preventDefault();
-    setDragging(false);
+    parseData(clipboardData);
   };
 
   const handleDrop = (event: DragEvent) => {
@@ -119,35 +71,41 @@ const CSVHandler = ({
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
       const file = files[0]; // Get the first file
-
-      Papa.parse(file, {
-        header: false,
-        dynamicTyping: true,
-        skipEmptyLines: true,
-        complete: (result: Papa.ParseResult<string>) => {
-          setRows([]);
-        // check address here
-        //   if(!web3.utils.isAddress(result.data[0][0])) {
-        //     result.data.shift();
-        //   }
-          const data: IRow[] = result.data.map((data: any) => {
-            return {
-              address: data[0],
-              amount: data[1],
-            };
-          });
-          processData(data);
-        },
-      });
+      parseData(file);
     }
   };
+
+  const parseData = (data: string | File) => {
+    Papa.parse(data, {
+      header: false,
+      dynamicTyping: true,
+      skipEmptyLines: true,
+      complete: (result: Papa.ParseResult<string>) => {
+        setRows([]);
+        // omit first row if it's not an address
+        if(verifyAddress && !verifyAddress(result.data[0][0])) {
+          result.data.shift();
+        } else if(isNaN(Number(result.data[0][1]))) {
+          result.data.shift();
+        }
+        const data: IRow[] = result.data.map((data: any) => {
+          return {
+            address: data[0],
+            amount: data[1],
+          };
+        });
+        console.log(data);
+        setRows(data);
+      },
+    });
+  }
 
   return (
     <div className="mt-8 w-full mx-auto">
       <div className="text-lg">Upload Address and Amounts</div>
       <div className="flex flex-row justify-between">
         <div
-          className={`border p-2 w-full h-14 relative ${
+          className={`border p-2 w-full h-14 relative cursor-pointer ${
             dragging ? "bg-gray-200" : "bg-white"
           }`}
           ref={dragDiv}
@@ -156,7 +114,7 @@ const CSVHandler = ({
           <input
             type="file"
             accept=".csv"
-            className="absolute left-0 top-0 opacity-0 w-full h-full z-10"
+            className="absolute left-0 top-0 opacity-0 w-full h-full z-10 cursor-pointer"
             onChange={handleFileUpload}
           />
         </div>
@@ -172,12 +130,12 @@ const CSVHandler = ({
           {
             rows.map((row, index) => (
               <div
-                key={`${row.address}-${row.amount.toFixed()}-${index.toString()}`}
+                key={`${row.address}-${row.amount}-${index.toString()}`}
                 className={`grid grid-cols-[auto_1fr_auto_auto] gap-4 p-1 items-center ${index % 2 === 0 ? "bg-gray-100" : "bg-white"}`}
               >
                 <span>{index + 1}</span>
                 <span>{row.address}</span>
-                <span>{row.amount.toFixed()}</span>
+                <span>{row.amount}</span>
                 {/* <span>{toHumanNumber(row.amount, tokenDecimal)}</span> */}
                 {
                   isDeletable && 

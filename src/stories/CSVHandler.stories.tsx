@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import CSVHandler, { IRow } from '../csv-handler/CSVHandler'
+import CSVHandler from '../csv-handler/CSVHandler'
 import { useState } from 'react';
+import { getTokenDecimalFormatters } from '../csv-handler/utils';
+import { IRow } from '..';
 
 const meta: Meta<typeof CSVHandler> = {
     component: CSVHandler,
@@ -13,7 +15,11 @@ type Story = StoryObj<typeof CSVHandler>;
 const CSVHandlerWrapper = ({...args}) => {
     const [rows, setRows] = useState<IRow[]>([]);
 
-    return <CSVHandler {...args} rows={rows} setRows={setRows} />
+    return <CSVHandler
+        {...args}
+        rows={rows}
+        setRows={setRows}
+    />
 }
 
 export const FirstStory: Story = {
@@ -21,5 +27,6 @@ export const FirstStory: Story = {
     args: {
         isDeletable: true,
         isEditable: true,
+        formatters: getTokenDecimalFormatters(18)
     }
 }

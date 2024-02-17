@@ -1,35 +1,25 @@
 import React, { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
 import { CheckBadge, Pencil, Trash, Undo } from "./Icons";
-
-export type BuilderStatus = "ready" | "mintingStarted" | "mintingFinished" | "mintingFailed"
-
-export interface IRow {
-  address: string;
-  amount: string;
-}
-
-export interface IDataHandlerProps {
-  rows: IRow[];
-  setRows: React.Dispatch<React.SetStateAction<IRow[]>>;
-  verifyAddress?: (address: string) => boolean;
-  tokenDecimal?: number;
-  isDeletable?: boolean;
-  isEditable?: boolean;
-}
+import { ICSVHandlerProps, IRow } from "./types";
+import useRowsTotal from "./useRowsTotal";
+import BigNumber from "bignumber.js";
 
 const CSVHandler = ({
   rows,
   setRows,
   verifyAddress,
+  formatters,
   isDeletable,
   isEditable
-}: IDataHandlerProps) => {
+}: ICSVHandlerProps) => {
   const [editableRow, setEditableRow] = useState<number | null>(null)
   const [dragging, setDragging] = useState<boolean>(false);
   const dragDiv = useRef<HTMLDivElement>(null);
   const [editedAddress, setEditedAddress] = useState<string>("");
   const [editedAmount, setEditedAmount] = useState<string>("");
+
+  const totalAmount = useRowsTotal({rows});
 
   useEffect(() => {
     const div = dragDiv.current;
@@ -95,18 +85,21 @@ const CSVHandler = ({
           result.data.shift();
         }
         const data: IRow[] = result.data.map((data: any) => {
+          const address = data[0];
+          const amount = getRealAmount(data[1]).toFixed(0);
           return {
-            address: data[0],
-            amount: data[1],
+            address: address,
+            amount: amount,
           };
         });
-        console.log(data);
         setRows(data);
       },
     });
   }
 
   const isRowEditable = (rowIndex: number) => rowIndex === editableRow;
+  const getRealAmount = (amount: string) => formatters ? formatters.toReal(amount) : new BigNumber(amount);
+  const getDisplayAmount = (amount: string) => formatters ? formatters.toDisplay(amount) : amount;
 
   return (
     <div className="mt-8 w-full mx-auto">
@@ -148,7 +141,7 @@ const CSVHandler = ({
             rows.map((row, index) => (
               <div
                 key={`${row.address}-${row.amount}-${index.toString()}`}
-                className={`grid grid-cols-[auto_1fr_auto_auto_auto] gap-3 p-1 items-center ${index % 2 === 0 ? "bg-gray-100" : "bg-white"}`}
+                className={`grid grid-cols-[1fr_25fr_auto_auto_auto] gap-3 p-1 items-center ${index % 2 === 0 ? "bg-gray-100" : "bg-white"}`}
               >
                 <span>{index + 1}</span>
                 {
@@ -169,13 +162,13 @@ const CSVHandler = ({
                     value={editedAmount}
                     onChange={(event) => setEditedAmount(event.target.value)}
                   /> :
-                  <span>{row.amount}</span>
+                  <span>{getDisplayAmount(row.amount)}</span>
                 }
                 {
                   editableRow === null && isEditable && 
                   <button onClick={() => {
                     setEditedAddress(row.address);
-                    setEditedAmount(row.amount);
+                    setEditedAmount(getDisplayAmount(row.amount));
                     setEditableRow(index)
                   }}><Pencil /></button>
                 }
@@ -200,7 +193,7 @@ const CSVHandler = ({
                       setRows((oldRows) => {
                         const newRows = [...oldRows];
                         newRows[index].address = editedAddress;
-                        newRows[index].amount = editedAmount;
+                        newRows[index].amount = getRealAmount(editedAmount.replace(/,/g, '')).toFixed(0); // removing commas
                         return newRows;
                       })
                       setEditedAddress("");
@@ -220,9 +213,8 @@ const CSVHandler = ({
         <div className="sticky flex justify-between mb-1 bottom-0 ">
           <p className="font-semibold">Total Addresses: {rows.length}</p>
           <p className="font-semibold">
-            Total Amount: XXX,XXX,XXX
-            {/* Total Amount: {toHumanNumber(getTotalAmountOfRows(rows), tokenDecimal)} */}
-          </p>    
+            Total Amount: {totalAmount.toString()}
+          </p>
         </div>
       </div>
     </div>

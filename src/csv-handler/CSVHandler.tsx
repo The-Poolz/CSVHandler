@@ -87,7 +87,7 @@ const CSVHandler = ({
         }
         const finalData: IRow[] = filteredData.map((data: any) => {
           const address = data[0];
-          const amount = getRealAmount(data[1]).toFixed(0);
+          const amount = getRealAmount(data[1]);
           return {
             address: address,
             amount: amount,
@@ -194,7 +194,7 @@ const CSVHandler = ({
                       setRows((oldRows) => {
                         const newRows = [...oldRows];
                         newRows[index].address = editedAddress;
-                        newRows[index].amount = getRealAmount(editedAmount.replace(/,/g, '')).toFixed(0); // removing commas
+                        newRows[index].amount = getRealAmount(editedAmount.replace(/,/g, '')); // removing commas
                         return newRows;
                       })
                       setEditedAddress("");

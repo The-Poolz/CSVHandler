@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 
 export interface IRow {
   address: string;
-  amount: string;
+  amount: BigNumber;
 }
 
 export interface ICSVHandlerProps {

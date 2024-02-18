@@ -1,3 +1,4 @@
+import "./index.css"
 import CSVHandler from "./csv-handler/CSVHandler";
 import useRowsTotal from "./csv-handler/useRowsTotal";
 

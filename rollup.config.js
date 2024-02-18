@@ -20,6 +20,6 @@ export default [
                 })
             ]
         },
-        plugins: [typescript()]
+        plugins: [typescript({declaration: true, declarationDir: 'dist', outDir: 'dist'})]
     }
 ]

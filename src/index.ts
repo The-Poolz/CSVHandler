@@ -1,3 +1,7 @@
-export * from './csv-handler/CSVHandler';
-export * from './csv-handler/types';
-export * from './csv-handler/useRowsTotal';
+import CSVHandler from "./csv-handler/CSVHandler";
+import useRowsTotal from "./csv-handler/useRowsTotal";
+
+export default CSVHandler;
+export { useRowsTotal };
+export type { IRow, ICSVHandlerProps, Formatters } from "./csv-handler/types";
+export * from "./csv-handler/utils";

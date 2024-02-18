@@ -12,8 +12,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    "declaration": true,
     "jsx": "react-jsx",
-
+    "typeRoots": ["./dist/index.d.ts"],
+    
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -22,4 +24,4 @@
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
-}
+} 

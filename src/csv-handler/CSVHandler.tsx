@@ -8,7 +8,6 @@ import BigNumber from "bignumber.js";
 const CSVHandler = ({
   rows,
   setRows,
-  verifyAddress,
   formatters,
   isDeletable,
   isEditable
@@ -78,13 +77,15 @@ const CSVHandler = ({
       skipEmptyLines: true,
       complete: (result: Papa.ParseResult<string>) => {
         setRows([]);
+        const filteredData = [...result.data]
         // omit first row if it's not an address
-        if(verifyAddress && !verifyAddress(result.data[0][0])) {
-          result.data.shift();
-        } else if(isNaN(Number(result.data[0][1]))) {
-          result.data.shift();
+        if(isNaN(Number(filteredData[0][1]))) {
+          filteredData.shift();
         }
-        const data: IRow[] = result.data.map((data: any) => {
+        while(isNaN(Number(filteredData[filteredData.length - 1][1])) || !Number(filteredData[filteredData.length - 1][1])) {
+          filteredData.pop();
+        }
+        const finalData: IRow[] = filteredData.map((data: any) => {
           const address = data[0];
           const amount = getRealAmount(data[1]).toFixed(0);
           return {
@@ -92,14 +93,14 @@ const CSVHandler = ({
             amount: amount,
           };
         });
-        setRows(data);
+        setRows(finalData);
       },
     });
   }
 
   const isRowEditable = (rowIndex: number) => rowIndex === editableRow;
   const getRealAmount = (amount: string) => formatters ? formatters.toReal(amount) : new BigNumber(amount);
-  const getDisplayAmount = (amount: string) => formatters ? formatters.toDisplay(amount) : amount;
+  const getDisplayAmount = (amount: string | BigNumber) => formatters ? formatters.toDisplay(amount) : amount;
 
   return (
     <div className="mt-8 w-full mx-auto">
@@ -162,13 +163,13 @@ const CSVHandler = ({
                     value={editedAmount}
                     onChange={(event) => setEditedAmount(event.target.value)}
                   /> :
-                  <span>{getDisplayAmount(row.amount)}</span>
+                  <span>{getDisplayAmount(row.amount).toString()}</span>
                 }
                 {
                   editableRow === null && isEditable && 
                   <button onClick={() => {
                     setEditedAddress(row.address);
-                    setEditedAmount(getDisplayAmount(row.amount));
+                    setEditedAmount(getDisplayAmount(row.amount).toString());
                     setEditableRow(index)
                   }}><Pencil /></button>
                 }
@@ -213,7 +214,7 @@ const CSVHandler = ({
         <div className="sticky flex justify-between mb-1 bottom-0 ">
           <p className="font-semibold">Total Addresses: {rows.length}</p>
           <p className="font-semibold">
-            Total Amount: {totalAmount.toString()}
+            Total Amount: {getDisplayAmount(totalAmount).toString()}
           </p>
         </div>
       </div>

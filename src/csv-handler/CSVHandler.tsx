@@ -4,11 +4,12 @@ import { CheckBadge, Pencil, Trash, Undo } from "./Icons";
 import { ICSVHandlerProps, IRow } from "./types";
 import useRowsTotal from "./useRowsTotal";
 import BigNumber from "bignumber.js";
+import { toDisplay, toReal } from "./utils";
 
 const CSVHandler = ({
   rows,
   setRows,
-  formatters,
+  tokenDecimal,
   isDeletable,
   isEditable
 }: ICSVHandlerProps) => {
@@ -17,8 +18,30 @@ const CSVHandler = ({
   const dragDiv = useRef<HTMLDivElement>(null);
   const [editedAddress, setEditedAddress] = useState<string>("");
   const [editedAmount, setEditedAmount] = useState<string>("");
+  const [previousTokenDecimal, setPreviousTokenDecimal] = useState<number>(0);
 
   const totalAmount = useRowsTotal({rows});
+  console.log([...rows.map(row => row.amount.toFixed()), tokenDecimal])
+
+  useEffect(() => {
+    setPreviousTokenDecimal(tokenDecimal || 0);
+  }, [])
+
+  useEffect(() => {
+    if (tokenDecimal === previousTokenDecimal) return;
+    setRows((oldRows) => {
+      const newRows = oldRows.map(row => {
+        const humanAmount = row.amount.dividedBy(new BigNumber(10).pow(previousTokenDecimal));
+        const realAmount = humanAmount.multipliedBy(new BigNumber(10).pow(tokenDecimal ?? 0));
+        return {
+          ...row,
+          amount: realAmount
+        }
+      })
+      return newRows;
+    })
+    setPreviousTokenDecimal(tokenDecimal || 0);
+  }, [tokenDecimal])
 
   useEffect(() => {
     const div = dragDiv.current;
@@ -34,6 +57,16 @@ const CSVHandler = ({
     const handleDragLeave = (event: DragEvent) => {
       event.preventDefault();
       setDragging(false);
+    };
+    const handleDrop = (event: DragEvent) => {
+      event.preventDefault();
+      setDragging(false);
+      // Access the files
+      const files = event.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0]; // Get the first file
+        parseData(file);
+      }
     };
     div.addEventListener("dragover", handleDragOver);
     div.addEventListener("dragenter", handleDragEnter);
@@ -57,17 +90,6 @@ const CSVHandler = ({
   const handlePaste = async () => {
     const clipboardData = await navigator.clipboard.readText();
     parseData(clipboardData);
-  };
-
-  const handleDrop = (event: DragEvent) => {
-    event.preventDefault();
-    setDragging(false);
-    // Access the files
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      const file = files[0]; // Get the first file
-      parseData(file);
-    }
   };
 
   const parseData = (data: string | File) => {
@@ -99,8 +121,8 @@ const CSVHandler = ({
   }
 
   const isRowEditable = (rowIndex: number) => rowIndex === editableRow;
-  const getRealAmount = (amount: string) => formatters ? formatters.toReal(amount) : new BigNumber(amount);
-  const getDisplayAmount = (amount: string | BigNumber) => formatters ? formatters.toDisplay(amount) : amount;
+  const getRealAmount = (amount: string) => tokenDecimal ? toReal(amount, tokenDecimal) : new BigNumber(amount);
+  const getDisplayAmount = (amount: string | BigNumber) => tokenDecimal ? toDisplay(amount, tokenDecimal) : amount;
 
   return (
     <div className="mt-8 w-full mx-auto">

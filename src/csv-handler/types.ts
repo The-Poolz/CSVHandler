@@ -9,7 +9,7 @@ export interface ICSVHandlerProps {
   rows: IRow[];
   setRows: React.Dispatch<React.SetStateAction<IRow[]>>;
   verifyAddress?: (address: string) => boolean;
-  formatters?: Formatters;
+  tokenDecimal?: number;
   isDeletable?: boolean;
   isEditable?: boolean;
 }

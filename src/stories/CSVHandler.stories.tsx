@@ -1,32 +1,65 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import CSVHandler from '../csv-handler/CSVHandler'
-import { useState } from 'react';
-import { getTokenDecimalFormatters } from '../csv-handler/utils';
-import { IRow } from '..';
+import type { ArgTypes, Meta, StoryObj } from "@storybook/react";
+import CSVHandler from "../csv-handler/CSVHandler";
+import { useState } from "react";
+import { getTokenDecimalFormatters } from "../csv-handler/utils";
+import { ICSVHandlerProps, IRow } from "..";
 
-const meta: Meta<typeof CSVHandler> = {
-    component: CSVHandler,
+interface CSVHandlerArgTypes extends ArgTypes<ICSVHandlerProps> {
+  tokenDecimal: {
+    control: {
+      type: string;
+      min: number;
+      step: number;
+    };
+    defaultValue: number;
+  };
 }
 
-export default meta
+const meta: Meta<typeof CSVHandler> = {
+  // title: "YourComponent/CSVHandler",
+  component: CSVHandler,
+  argTypes: {
+    tokenDecimal: {
+      control: {
+        type: "number",
+        min: 0,
+        step: 1,
+      },
+      defaultValue: 18, 
+    },
+  } as CSVHandlerArgTypes,
+};
+
+export default meta;
 
 type Story = StoryObj<typeof CSVHandler>;
 
-const CSVHandlerWrapper = ({...args}) => {
-    const [rows, setRows] = useState<IRow[]>([]);
-
-    return <CSVHandler
-        {...args}
-        rows={rows}
-        setRows={setRows}
-    />
+interface CSVHandlerWrapperProps {
+  tokenDecimal?: number;
+  isDeletable?: boolean;
 }
+
+const CSVHandlerWrapper: React.FC<CSVHandlerWrapperProps> = ({
+  tokenDecimal,
+  ...args
+}) => {
+  const [rows, setRows] = useState<IRow[]>([]);
+  const formatters = tokenDecimal ? getTokenDecimalFormatters(tokenDecimal) : undefined;
+
+  return (
+    <CSVHandler
+      {...args}
+      formatters={formatters}
+      rows={rows}
+      setRows={setRows}
+    />
+  );
+};
 
 export const FirstStory: Story = {
-    render: ({...args}) => <CSVHandlerWrapper {...args}/>,
-    args: {
-        isDeletable: true,
-        isEditable: true,
-        formatters: getTokenDecimalFormatters(18)
-    }
-}
+  render: (args) => <CSVHandlerWrapper {...args} />,
+  args: {
+    isDeletable: true,
+    isEditable: true,
+  },
+};

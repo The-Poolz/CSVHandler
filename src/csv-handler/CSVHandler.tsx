@@ -6,19 +6,33 @@ import useRowsTotal from "./useRowsTotal";
 import BigNumber from "bignumber.js";
 
 const CSVHandler = ({
-  rows,
+  // rows,
   setRows,
   formatters,
   isDeletable,
   isEditable
 }: ICSVHandlerProps) => {
+  const [originalRows, setOriginalRows] = useState<IRow[]>([]);
   const [editableRow, setEditableRow] = useState<number | null>(null)
   const [dragging, setDragging] = useState<boolean>(false);
   const dragDiv = useRef<HTMLDivElement>(null);
   const [editedAddress, setEditedAddress] = useState<string>("");
   const [editedAmount, setEditedAmount] = useState<string>("");
 
-  const totalAmount = useRowsTotal({rows});
+  const totalAmount = useRowsTotal(originalRows);
+
+  useEffect(() => {
+    if(!originalRows.length) return;
+    setRows(() => {
+      const realRows =  originalRows.map(row => {
+        return {
+          address: row.address,
+          amount: formatters ? formatters.toReal(row.amount) : row.amount
+        }
+      })
+      return realRows;
+    })
+  }, [originalRows])
 
   useEffect(() => {
     const div = dragDiv.current;
@@ -85,22 +99,28 @@ const CSVHandler = ({
         while(isNaN(Number(filteredData[filteredData.length - 1][1])) || !Number(filteredData[filteredData.length - 1][1])) {
           filteredData.pop();
         }
-        const finalData: IRow[] = filteredData.map((data: any) => {
+        const originalData = filteredData.map((data: any) => {
           const address = data[0];
-          const amount = getRealAmount(data[1]);
+          const amount = new BigNumber(data[1]);
           return {
             address: address,
             amount: amount,
           };
         });
-        setRows(finalData);
+        setOriginalRows(originalData);
       },
     });
   }
 
+  const getNumberWithCommas = (num: string | BigNumber) => {
+    return new Intl.NumberFormat("en-US", {
+			maximumFractionDigits: 18,
+		}).format(parseFloat(num.toString()));
+  }
+
   const isRowEditable = (rowIndex: number) => rowIndex === editableRow;
-  const getRealAmount = (amount: string) => formatters ? formatters.toReal(amount) : new BigNumber(amount);
-  const getDisplayAmount = (amount: string | BigNumber) => formatters ? formatters.toDisplay(amount) : amount;
+  // const getRealAmount = (amount: string) => formatters ? formatters.toReal(amount) : new BigNumber(amount);
+  // const getDisplayAmount = (amount: string | BigNumber) => formatters ? formatters.toDisplay(amount) : amount;
 
   return (
     <div className="mt-8 w-full mx-auto">
@@ -121,7 +141,7 @@ const CSVHandler = ({
           />
         </div>
         {
-          rows.length ? 
+          originalRows.length ? 
           <button
             onClick={() => setRows([])}
             className="ml-2 z-10 px-4 text-white cursor-pointer bg-rose-500 rounded-lg"
@@ -139,7 +159,7 @@ const CSVHandler = ({
       <div className="border mt-4 p-2 w-full h-72">
         <div className="w-full h-64 overflow-auto">
           {
-            rows.map((row, index) => (
+            originalRows.map((row, index) => (
               <div
                 key={`${row.address}-${row.amount}-${index.toString()}`}
                 className={`grid grid-cols-[1fr_25fr_auto_auto_auto] gap-3 p-1 items-center ${index % 2 === 0 ? "bg-gray-100" : "bg-white"}`}
@@ -163,13 +183,13 @@ const CSVHandler = ({
                     value={editedAmount}
                     onChange={(event) => setEditedAmount(event.target.value)}
                   /> :
-                  <span>{getDisplayAmount(row.amount).toString()}</span>
+                  <span>{getNumberWithCommas(row.amount)}</span>
                 }
                 {
                   editableRow === null && isEditable && 
                   <button onClick={() => {
                     setEditedAddress(row.address);
-                    setEditedAmount(getDisplayAmount(row.amount).toString());
+                    setEditedAmount(getNumberWithCommas(row.amount));
                     setEditableRow(index)
                   }}><Pencil /></button>
                 }
@@ -177,7 +197,7 @@ const CSVHandler = ({
                   editableRow === null && isDeletable && 
                   <button
                     onClick={() => {
-                      setRows((oldRows) => {
+                      setOriginalRows((oldRows) => {
                         const newRows = [...oldRows];
                         newRows.splice(index, 1);
                         return newRows;
@@ -191,10 +211,10 @@ const CSVHandler = ({
                   isRowEditable(index) && <>
                     <button onClick={() => {
                       setEditableRow(null)
-                      setRows((oldRows) => {
+                      setOriginalRows((oldRows) => {
                         const newRows = [...oldRows];
                         newRows[index].address = editedAddress;
-                        newRows[index].amount = getRealAmount(editedAmount.replace(/,/g, '')); // removing commas
+                        newRows[index].amount = new BigNumber(editedAmount.replace(/,/g, '')); // removing commas
                         return newRows;
                       })
                       setEditedAddress("");
@@ -212,9 +232,9 @@ const CSVHandler = ({
           }
         </div>
         <div className="sticky flex justify-between mb-1 bottom-0 ">
-          <p className="font-semibold">Total Addresses: {rows.length}</p>
+          <p className="font-semibold">Total Addresses: {originalRows.length}</p>
           <p className="font-semibold">
-            Total Amount: {getDisplayAmount(totalAmount).toString()}
+            Total Amount: {totalAmount.toString()}
           </p>
         </div>
       </div>

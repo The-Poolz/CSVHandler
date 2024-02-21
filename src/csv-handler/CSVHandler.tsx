@@ -21,7 +21,6 @@ const CSVHandler = ({
   const [previousTokenDecimal, setPreviousTokenDecimal] = useState<number>(0);
 
   const totalAmount = useRowsTotal({rows});
-  console.log([...rows.map(row => row.amount.toFixed()), tokenDecimal])
 
   useEffect(() => {
     setPreviousTokenDecimal(tokenDecimal || 0);

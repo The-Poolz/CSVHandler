@@ -3,19 +3,7 @@ import CSVHandler from "../csv-handler/CSVHandler";
 import { useState } from "react";
 import { IRow } from "..";
 
-// interface CSVHandlerArgTypes extends ArgTypes<ICSVHandlerProps> {
-//   tokenDecimal: {
-//     control: {
-//       type: string;
-//       min: number;
-//       step: number;
-//     };
-//     defaultValue: number;
-//   };
-// }
-
 const meta: Meta<typeof CSVHandler> = {
-  // title: "YourComponent/CSVHandler",
   component: CSVHandler,
 };
 

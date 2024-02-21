@@ -188,7 +188,7 @@ const CSVHandler = ({
                 }
                 {
                   editableRow === null && isEditable && 
-                  <button onClick={() => {
+                  <button title="Edit" onClick={() => {
                     setEditedAddress(row.address);
                     setEditedAmount(getDisplayAmount(row.amount).toString());
                     setEditableRow(index)
@@ -197,6 +197,7 @@ const CSVHandler = ({
                 {
                   editableRow === null && isDeletable && 
                   <button
+                    title="Delete"
                     onClick={() => {
                       setRows((oldRows) => {
                         const newRows = [...oldRows];
@@ -210,7 +211,7 @@ const CSVHandler = ({
                 }
                 {
                   isRowEditable(index) && <>
-                    <button onClick={() => {
+                    <button title="Save" onClick={() => {
                       setEditableRow(null)
                       setRows((oldRows) => {
                         const newRows = [...oldRows];
@@ -221,7 +222,7 @@ const CSVHandler = ({
                       setEditedAddress("");
                       setEditedAmount("");
                     }}> <CheckBadge /> </button>
-                    <button onClick={() => {
+                    <button title="Undo" onClick={() => {
                       setEditableRow(null)
                       setEditedAddress("");
                       setEditedAmount("");

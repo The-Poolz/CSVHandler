@@ -1,30 +1,60 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# React CSV Handler Component
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+React CSV Handler is a simple, reusable React component designed for handling CSV files in web applications. It allows users to upload, parse, edit, and display CSV data, specifically focusing on address and amount fields. The component supports drag-and-drop file upload, pasting from clipboard, editing individual rows, and calculating the total amount.
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **CSV File Upload:** Users can upload CSV files via drag-and-drop or by clicking to upload.
+- **Clipboard Data Parsing:** Users can paste data directly from the clipboard.
+- **Editable Rows:** Supports inline editing of address and amount fields in the CSV.
+- **Total Amount Calculation:** Calculates and displays the total amount from the CSV data.
+- **Customizability:** The component accepts various props for customization, such as decimal precision for amounts.
 
-- Configure the top-level `parserOptions` property like this:
+## Installation
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+To install the React CSV Handler component in your project, run:
+
+```bash
+npm install @poolzfinance/csvhandler
+```
+```bash
+yarn add @poolzfinance/csvhandler
+```
+```bash
+pnpm add @poolzfinance/csvhandler
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## Usage
+
+Import and use the `CSVHandler` component in your React application:
+
+```javascript
+import CSVHandler from '@poolzfinance/csvhandler';
+
+const App = () => {
+  // State to store the rows from the CSV file
+  const [rows, setRows] = useState([]);
+
+  return (
+    <CSVHandler
+      rows={rows} // Pass the rows data to the CSVHandler
+      setRows={setRows} // Pass the function to update the rows
+      tokenDecimal={2} // Set the decimal precision for amount fields
+      isDeletable={true} // Enable the option to delete rows
+      isEditable={true} // Enable the option to edit rows
+    />
+  );
+};
+
+export default App;
+```
+
+## Running Storybook
+
+To view and interact with the `CSVHandler` component in a Storybook environment, run the command:
+
+   ```bash
+   pnpm run storybook

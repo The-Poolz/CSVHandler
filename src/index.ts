@@ -6,3 +6,4 @@ export default CSVHandler;
 export { useRowsTotal };
 export type { IRow, ICSVHandlerProps, Formatters } from "./csv-handler/types";
 export * from "./csv-handler/utils";
+export * from "./csv-handler/Icons";

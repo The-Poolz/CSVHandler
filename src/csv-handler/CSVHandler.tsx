@@ -20,11 +20,50 @@ const CSVHandler = ({
   const [editedAmount, setEditedAmount] = useState<string>("");
   const [previousTokenDecimal, setPreviousTokenDecimal] = useState<number>(0);
 
-  const totalAmount = useRowsTotal({rows});
+  const totalAmount = useRowsTotal({ rows });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    parseData(file);
+  };
+
+  const handlePaste = async () => {
+    const clipboardData = await navigator.clipboard.readText();
+    parseData(clipboardData);
+  };
+
+  const parseData = (data: string | File) => {
+    Papa.parse(data, {
+      header: false,
+      dynamicTyping: true,
+      skipEmptyLines: true,
+      complete: (result: Papa.ParseResult<string>) => {
+        setRows([]);
+        const filteredData = [...result.data]
+        // omit first row if it's not an address
+        if (isNaN(Number(filteredData[0][1]))) {
+          filteredData.shift();
+        }
+        while (isNaN(Number(filteredData[filteredData.length - 1][1])) || !Number(filteredData[filteredData.length - 1][1])) {
+          filteredData.pop();
+        }
+        const finalData: IRow[] = filteredData.map((data) => {
+          const address = data[0];
+          const amount = getRealAmount(data[1]);
+          return {
+            address: address,
+            amount: amount,
+          };
+        });
+        setRows(finalData);
+      },
+    });
+  }
 
   useEffect(() => {
-    setPreviousTokenDecimal(tokenDecimal || 0);
-  }, [])
+    setPreviousTokenDecimal(tokenDecimal ?? 0);
+  }, [tokenDecimal])
 
   useEffect(() => {
     if (tokenDecimal === previousTokenDecimal) return;
@@ -39,8 +78,8 @@ const CSVHandler = ({
       })
       return newRows;
     })
-    setPreviousTokenDecimal(tokenDecimal || 0);
-  }, [tokenDecimal])
+    setPreviousTokenDecimal(tokenDecimal ?? 0);
+  }, [tokenDecimal, previousTokenDecimal, setRows])
 
   useEffect(() => {
     const div = dragDiv.current;
@@ -79,86 +118,46 @@ const CSVHandler = ({
     };
   }, [])
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("uploading");
-    const file = event.target.files?.[0];
-    if (!file) return;
-    parseData(file);   
-  };
-
-  const handlePaste = async () => {
-    const clipboardData = await navigator.clipboard.readText();
-    parseData(clipboardData);
-  };
-
-  const parseData = (data: string | File) => {
-    Papa.parse(data, {
-      header: false,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      complete: (result: Papa.ParseResult<string>) => {
-        setRows([]);
-        const filteredData = [...result.data]
-        // omit first row if it's not an address
-        if(isNaN(Number(filteredData[0][1]))) {
-          filteredData.shift();
-        }
-        while(isNaN(Number(filteredData[filteredData.length - 1][1])) || !Number(filteredData[filteredData.length - 1][1])) {
-          filteredData.pop();
-        }
-        const finalData: IRow[] = filteredData.map((data: any) => {
-          const address = data[0];
-          const amount = getRealAmount(data[1]);
-          return {
-            address: address,
-            amount: amount,
-          };
-        });
-        setRows(finalData);
-      },
-    });
-  }
-
   const isRowEditable = (rowIndex: number) => rowIndex === editableRow;
   const getRealAmount = (amount: string) => tokenDecimal ? toReal(amount, tokenDecimal) : new BigNumber(amount);
   const getDisplayAmount = (amount: string | BigNumber) => tokenDecimal ? toDisplay(amount, tokenDecimal) : amount;
 
   return (
     <div className="mt-8 w-full mx-auto">
-      <div className="text-lg">Upload Address and Amounts</div>
-      <div className="flex flex-row justify-between">
+      <div className="py-2">Upload Address and Amounts</div>
+      <div className="flex flex-row justify-between gap-x-4">
         <div
-          className={`border p-2 w-full h-14 relative cursor-pointer ${
-            dragging ? "bg-gray-200" : "bg-white"
-          }`}
+          className={`flex items-center justify-center text-gray-400 border w-full h-12 relative ${dragging ? "bg-gray-200 " : "bg-white"
+            }`}
           ref={dragDiv}
         >
           {dragging ? "Drop to Upload" : "Drag and Drop or Click To Upload"}
           <input
             type="file"
             accept=".csv"
-            className="absolute left-0 top-0 opacity-0 w-full h-full z-10 cursor-pointer"
+            className="absolute inset-0 opacity-0 z-10 cursor-pointer"
+            title='Drag and Drop or Click To Upload .csv file'
             onChange={handleFileUpload}
           />
         </div>
         {
-          rows.length ? 
-          <button
-            onClick={() => setRows([])}
-            className="ml-2 z-10 px-4 text-white cursor-pointer bg-rose-500 rounded-lg"
-          >
-            Clear
-          </button> :
-          <button
-            onClick={handlePaste}
-            className="ml-2 z-10 px-4 text-white cursor-pointer bg-blue-500 rounded-lg"
-          >
-            Paste
-          </button>
+          rows.length ?
+            <button
+              onClick={() => setRows([])}
+              className="px-7 text-white cursor-pointer bg-rose-500 rounded-lg"
+            >
+              Clear
+            </button> :
+            <button
+              onClick={handlePaste}
+              className="px-7 text-white cursor-pointer bg-blue-500 rounded-lg"
+            >
+              Paste
+            </button>
         }
       </div>
-      <div className="border mt-4 p-2 w-full h-72">
-        <div className="w-full h-64 overflow-auto">
+      {rows.length !== 0 && <div className="flex flex-col border mt-4 px-2 pt-2 w-full max-h-72">
+        <div className="w-full max-h-64 overflow-auto">
           {
             rows.map((row, index) => (
               <div
@@ -168,26 +167,26 @@ const CSVHandler = ({
                 <span>{index + 1}</span>
                 {
                   isRowEditable(index) ?
-                  <input
-                    type="text"
-                    className="p-1 border-solid border-2 border-gray-300"
-                    value={editedAddress}
-                    onChange={(event) => setEditedAddress(event.target.value)}
-                  /> :
-                  <span>{row.address}</span>
+                    <input
+                      type="text"
+                      className="p-1 border-solid border-2 border-gray-300"
+                      value={editedAddress}
+                      onChange={(event) => setEditedAddress(event.target.value)}
+                    /> :
+                    <span>{row.address}</span>
                 }
                 {
                   isRowEditable(index) ?
-                  <input
-                    type="text"
-                    className="p-1 border-solid border-2 border-gray-300 text-right"
-                    value={editedAmount}
-                    onChange={(event) => setEditedAmount(event.target.value)}
-                  /> :
-                  <span>{getDisplayAmount(row.amount).toString()}</span>
+                    <input
+                      type="text"
+                      className="p-1 border-solid border-2 border-gray-300 text-right"
+                      value={editedAmount}
+                      onChange={(event) => setEditedAmount(event.target.value)}
+                    /> :
+                    <span>{getDisplayAmount(row.amount).toString()}</span>
                 }
                 {
-                  editableRow === null && isEditable && 
+                  editableRow === null && isEditable &&
                   <button title="Edit" onClick={() => {
                     setEditedAddress(row.address);
                     setEditedAmount(getDisplayAmount(row.amount).toString());
@@ -195,7 +194,7 @@ const CSVHandler = ({
                   }}><Pencil /></button>
                 }
                 {
-                  editableRow === null && isDeletable && 
+                  editableRow === null && isDeletable &&
                   <button
                     title="Delete"
                     onClick={() => {
@@ -233,13 +232,17 @@ const CSVHandler = ({
             ))
           }
         </div>
-        <div className="sticky flex justify-between mb-1 bottom-0 ">
-          <p className="font-semibold">Total Addresses: {rows.length}</p>
-          <p className="font-semibold">
-            Total Amount: {getDisplayAmount(totalAmount).toString()}
+        <div className="sticky flex justify-between bottom-0 text-gray-400 py-2">
+          <p>
+            Total Addresses:{' '}
+            <span className="font-semibold text-gray-900">{rows.length}</span>
+          </p>
+          <p>
+            Total Amount:{' '}
+            <span className="font-semibold text-gray-800">{getDisplayAmount(totalAmount).toString()}</span>
           </p>
         </div>
-      </div>
+      </div>}
     </div>
   );
 };

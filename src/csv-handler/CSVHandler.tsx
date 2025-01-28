@@ -19,15 +19,14 @@ const CSVHandler = ({
   const [editedAddress, setEditedAddress] = useState<string>("");
   const [editedAmount, setEditedAmount] = useState<string>("");
   const [previousTokenDecimal, setPreviousTokenDecimal] = useState<number>(0);
+  const [file, setFile] = useState<File>();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const totalAmount = useRowsTotal({ rows });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    parseData(file);
+    setFile(event.target.files?.[0]);
   };
-
   const handlePaste = async () => {
     const clipboardData = await navigator.clipboard.readText();
     parseData(clipboardData);
@@ -60,6 +59,18 @@ const CSVHandler = ({
       },
     });
   }
+
+  useEffect(() => {
+    if (!file) return;
+    parseData(file);
+  }, [file]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (rows.length === 0 && inputRef.current) {
+      setFile(undefined);
+      inputRef.current.value = '';
+    }
+  }, [rows])
 
   useEffect(() => {
     setPreviousTokenDecimal(tokenDecimal ?? 0);
@@ -133,11 +144,15 @@ const CSVHandler = ({
         >
           {dragging ? "Drop to Upload" : "Drag and Drop or Click To Upload"}
           <input
+            ref={inputRef}
             type="file"
             accept=".csv"
             className="absolute inset-0 opacity-0 z-10 cursor-pointer"
             title='Drag and Drop or Click To Upload .csv file'
             onChange={handleFileUpload}
+          // onClick={(event) => {
+          //   event.target.value = null
+          // }}
           />
         </div>
         {

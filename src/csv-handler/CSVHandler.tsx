@@ -28,8 +28,12 @@ const CSVHandler = ({
     setFile(event.target.files?.[0]);
   };
   const handlePaste = async () => {
-    const clipboardData = await navigator.clipboard.readText();
-    parseData(clipboardData);
+    try {
+      const clipboardData = await navigator.clipboard.readText();
+      parseData(clipboardData);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const parseData = (data: string | File) => {
@@ -127,7 +131,7 @@ const CSVHandler = ({
       div.removeEventListener("dragleave", handleDragLeave);
       div.removeEventListener("drop", handleDrop);
     };
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isRowEditable = (rowIndex: number) => rowIndex === editableRow;
   const getRealAmount = (amount: string) => tokenDecimal ? toReal(amount, tokenDecimal) : new BigNumber(amount);
@@ -150,25 +154,43 @@ const CSVHandler = ({
             className="absolute inset-0 opacity-0 z-10 cursor-pointer"
             title='Drag and Drop or Click To Upload .csv file'
             onChange={handleFileUpload}
-          // onClick={(event) => {
-          //   event.target.value = null
-          // }}
           />
         </div>
         {
           rows.length ?
             <button
-              onClick={() => setRows([])}
+              onClick={() => {
+                setRows([])
+
+                setEditableRow(null)
+                setEditedAddress("");
+                setEditedAmount("");
+              }}
               className="px-7 text-white cursor-pointer bg-rose-500 rounded-lg"
             >
               Clear
             </button> :
-            <button
-              onClick={handlePaste}
-              className="px-7 text-white cursor-pointer bg-blue-500 rounded-lg"
-            >
-              Paste
-            </button>
+            <>
+              <button
+                onClick={handlePaste}
+                className="px-7 text-white cursor-pointer bg-[#459af6] rounded-lg"
+              >
+                Paste
+              </button>
+              {isEditable && <button
+                onClick={() => {
+                  setRows([{
+                    address: '',
+                    amount: new BigNumber(0)
+                  }])
+
+                  setEditableRow(0)
+                  setEditedAddress('');
+                  setEditedAmount(getDisplayAmount(new BigNumber(0)).toString());
+                }
+                }
+                className="px-4 text-white cursor-pointer bg-[#d89145] rounded-lg text-2xl">+</button>}
+            </>
         }
       </div>
       {rows.length !== 0 && <div className="flex flex-col border mt-4 px-2 pt-2 w-full max-h-72">

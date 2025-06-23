@@ -61,3 +61,7 @@ pnpm run storybook
 ```
 
 This will start Storybook locally so you can browse and test the component.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

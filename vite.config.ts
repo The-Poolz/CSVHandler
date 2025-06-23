@@ -9,7 +9,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "./src/index.ts"),
-      name: "react-beautiful-timeline",
+      name: "csvhandler",
       fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {

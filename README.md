@@ -56,5 +56,8 @@ export default App;
 
 To view and interact with the `CSVHandler` component in a Storybook environment, run the command:
 
-   ```bash
-   pnpm run storybook
+```bash
+pnpm run storybook
+```
+
+This will start Storybook locally so you can browse and test the component.

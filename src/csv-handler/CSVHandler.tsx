@@ -45,25 +45,23 @@ const CSVHandler = ({
       skipEmptyLines: true,
       complete: (result: Papa.ParseResult<string>) => {
         setRows([]);
-        const filteredData = [...result.data];
-        // omit first row if it's not an address
-        if (isNaN(Number(filteredData[0][1]))) {
-          filteredData.shift();
+        const parsed = (result.data as string[][]).filter(
+          (row) => Array.isArray(row) && row.length >= 2
+        );
+
+        if (parsed.length && isNaN(Number(parsed[0][1]))) {
+          parsed.shift();
         }
-        while (
-          isNaN(Number(filteredData[filteredData.length - 1][1])) ||
-          !Number(filteredData[filteredData.length - 1][1])
-        ) {
-          filteredData.pop();
-        }
-        const finalData: IRow[] = filteredData.map((data) => {
-          const address = data[0];
-          const amount = getRealAmount(data[1]);
-          return {
-            address: address,
-            amount: amount,
-          };
-        });
+
+        const cleanData = parsed.filter(
+          (row) => !isNaN(Number(row[1])) && Number(row[1])
+        );
+
+        const finalData: IRow[] = cleanData.map((row) => ({
+          address: row[0],
+          amount: getRealAmount(row[1]),
+        }));
+
         setRows(finalData);
       },
     });

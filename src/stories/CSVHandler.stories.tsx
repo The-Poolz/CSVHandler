@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import CSVHandler from "../csv-handler/CSVHandler";
 import { useState } from "react";
 import { IRow } from "..";
